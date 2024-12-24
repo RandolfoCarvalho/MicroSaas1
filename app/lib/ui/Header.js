@@ -36,15 +36,15 @@ export default function Header() {
                 </li>
                 {session ? (
                   <li>
-                    <a href="#" className="hover:underline" onClick={() => signOut()}>
-                      Sair
+                    <a href="/users/cartoes" className="hover:underline">
+                      Meus cartões
                     </a>
                   </li>
                 ) : null}
                 {session ? (
                   <li>
-                    <a href="/users/cartoes" className="hover:underline">
-                      Meus cartões
+                    <a href="#" className="hover:underline" onClick={() => signOut()}>
+                      Sair
                     </a>
                   </li>
                 ) : null}

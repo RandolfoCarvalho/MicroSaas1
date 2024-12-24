@@ -1,5 +1,8 @@
+//app/api/auth/[...nextauth]/route.js
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -10,11 +13,65 @@ export const authOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials) => {
+        const { email, password } = credentials;
+
+        // Busca o usuário no banco de dados
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user) {
+          throw new Error("Email ou senha inválidos");
+        }
+
+        // Verifica a senha
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+        if (!isPasswordValid) {
+          throw new Error("Email ou senha inválidos");
+        }
+
+        // Retorna informações do usuário
+        return { id: user.id, email: user.email, name: user.name };
+      },
+    }),
   ],
   pages: {
     signIn: "/users/LoginPage",
   },
   callbacks: {
+    // Callback para adicionar o ID do usuário à sessão
+    async session({ session, token }) {
+      if (token?.id) {
+        session.user.id = token.id;
+      } else {
+        // Caso não exista no token, busca no banco
+        const dbUser = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+
+        if (dbUser) {
+          session.user.id = dbUser.id;
+        }
+      }
+      return session;
+    },
+
+    // Callback para adicionar o ID ao token JWT
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+
     // Callback para processar login
     async signIn({ user, account }) {
       if (account.provider === "google") {
@@ -48,21 +105,11 @@ export const authOptions = {
 
       return true;
     },
-
-    // Callback para adicionar o ID do usuário à sessão
-    async session({ session, token }) {
-      // Usa o ID armazenado no token (caso seja usado) ou consulta o banco de dados
-      const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email },
-      });
-
-      if (dbUser) {
-        session.user.id = dbUser.id;
-      }
-
-      return session;
-    },
   },
+  session: {
+    strategy: "jwt", // Persistência com JWT
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

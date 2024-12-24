@@ -1,9 +1,11 @@
 "use client";
 import { signIn, useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,24 +13,54 @@ export default function LoginPage() {
   // Função para lidar com o login usando email e senha
   const handleLoginEmail = async (e) => {
     e.preventDefault();
-    
-    // TODO implementar a lógica para autenticar com seu servidor
-    // TODO enviar os dados de email e senha para uma API
-    console.log('Login com Email:', email, password);
-    // Limpeza de campos e erro após tentativa de login
-    setEmail('');
-    setPassword('');
-    setError('Email ou senha inválidos');
-  };
+  
+    try {
+      const response = await fetch('../../api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || 'Erro ao fazer login');
+        return;
+      }
+  
+      const data = await response.json();
+      console.log('Login bem-sucedido:', data);
+      setError(''); // Remove qualquer erro exibido anteriormente
 
-  // Função para login com Google
+      // Usando signIn() do NextAuth para configurar a sessão
+      await signIn('credentials', {
+        redirect: false,
+        email: email,
+        password: password,
+      });
+
+      setEmail('');
+      setPassword('');
+      
+      
+      router.push('/');
+    } catch (error) {
+      console.error('Erro no login:', error.message);
+      setError('Erro ao se conectar ao servidor');
+    }
+  };
   const handleLoginGoogle = async () => {
     await signIn('google');
   };
-
   if (session) {
+    router.push('/');
     return <div>Bem-vindo, {session.user.name}</div>;
   }
+  if (status === "loading") {
+    return <div>Carregando...</div>;
+  }
+
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
@@ -86,10 +118,10 @@ export default function LoginPage() {
           <a href="#" className="text-sm text-blue-500">Esqueceu sua senha?</a>
         </div>
         <div className="mt-4 text-center">
-        <a href="/users/registerpage" className="text-sm text-blue-500 hover:underline">
-          Não possui uma conta? Crie uma!
-        </a>
-      </div>
+          <a href="/users/registerpage" className="text-sm text-blue-500 hover:underline">
+            Não possui uma conta? Crie uma!
+          </a>
+        </div>
       </div>
     </div>
   );
