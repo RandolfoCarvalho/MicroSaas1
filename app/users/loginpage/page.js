@@ -29,7 +29,6 @@ export default function LoginPage() {
   if (session) {
     return <div>Bem-vindo, {session.user.name}</div>;
   }
-
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">

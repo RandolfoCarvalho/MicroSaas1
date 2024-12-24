@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@prisma/client": "^6.1.0",
     "bcryptjs": "^2.4.3",
+    "formidable": "^3.5.2",
     "next": "15.1.2",
     "next-auth": "^4.24.11",
     "prisma": "^6.1.0",

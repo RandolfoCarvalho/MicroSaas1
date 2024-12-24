@@ -1,6 +1,8 @@
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -9,9 +11,100 @@ export default function Home() {
     data: '',
     corTexto: '#ff0000',
     fonte: 'sans',
+    musicUrl: '',
   });
 
   const [images, setImages] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  // Função para lidar com upload de música
+  const handleMusicUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setFormData(prev => ({
+        ...prev,
+        musicUrl: url
+      }));
+    }
+  };
+
+  // Função para controlar play/pause
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+  
+  // Função para enviar o cartão para o banco de dados
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    try {
+      // Upload das imagens
+      const imageUrls = await Promise.all(
+        images.map(async (img) => {
+          const blob = await fetch(img.url).then(r => r.blob());
+          const formData = new FormData();
+          formData.append('file', blob, img.name);
+  
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          });
+  
+          const data = await response.json();
+          return data.url;
+        })
+      );
+  
+      // Upload da música
+      let musicUrl = '';
+      if (formData.musicUrl) {
+        const musicBlob = await fetch(formData.musicUrl).then(r => r.blob());
+        const musicFormData = new FormData();
+        musicFormData.append('file', musicBlob, 'music.mp3');
+  
+        const musicResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: musicFormData
+        });
+  
+        const musicData = await musicResponse.json();
+        musicUrl = musicData.url;
+      }
+  
+      // Criar o cartão no banco de dados
+      const response = await fetch('/api/cards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: 1,
+          ...formData,
+          musicUrl,
+          images: imageUrls,
+        }),
+      });
+  
+      if (response.ok) {
+        alert('Cartão criado com sucesso!');
+        // Limpar o formulário ou redirecionar
+      } else {
+        throw new Error('Erro ao criar cartão');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao criar cartão');
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,23 +154,18 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Dados enviados:', formData);
-  };
-
   // Componente Carrossel separado e corrigido
   const Carousel = ({ images }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [autoPlayInterval, setAutoPlayInterval] = useState(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
-    const intervalTime = 3000;
+    const intervalTime = 7000;
     
     const nextSlide = () => {
       if (!isTransitioning) {
         setIsTransitioning(true);
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-        setTimeout(() => setIsTransitioning(false), 3000);
+        setTimeout(() => setIsTransitioning(false), 7000);
       }
     };
   
@@ -87,7 +175,7 @@ export default function Home() {
         setCurrentIndex((prevIndex) => 
           prevIndex === 0 ? images.length - 1 : prevIndex - 1
         );
-        setTimeout(() => setIsTransitioning(false), 3000); // Reduzido para 500ms
+        setTimeout(() => setIsTransitioning(false), 7000); // Reduzido para 500ms
       }
     };
   
@@ -303,6 +391,19 @@ export default function Home() {
                 </div>
               </div>
 
+
+              <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                Música de Fundo
+              </label>
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleMusicUpload}
+                className="w-full px-4 py-2 rounded-lg bg-black/30 border border-red-500/20 text-white focus:outline-none focus:border-red-500"
+              />
+            </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Estilo da Fonte
@@ -319,6 +420,8 @@ export default function Home() {
                 </select>
               </div>
 
+
+
               <button
                 type="submit"
                 className="w-full py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-medium hover:from-red-600 hover:to-pink-600 transition-colors"
@@ -328,7 +431,6 @@ export default function Home() {
             </form>
           </div>
 
-          {/* Preview Side */}
           {/* Preview Side */}
           <div className="rounded-lg border border-red-500/20 bg-gradient-to-r from-red-600/10 to-pink-600/10 backdrop-blur-sm p-8">
             <div className="h-full flex flex-col items-center justify-center">
@@ -357,6 +459,22 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+              <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                onClick={togglePlay}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors"
+              >
+                <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
+              </button>
+              {formData.musicUrl && (
+                <audio
+                  ref={audioRef}
+                  src={formData.musicUrl}
+                  onEnded={() => setIsPlaying(false)}
+                  className="hidden"
+                />
+              )}
+            </div>
               <p className="text-sm text-gray-400 mt-4">
                 Prévia do seu cartão de amor
               </p>

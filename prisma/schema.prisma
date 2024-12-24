@@ -14,6 +14,7 @@ model User {
   passwordHash String
   createdAt    DateTime      @default(now())
   externalLogins ExternalLogin[]
+  cards     Card[]
 }
 
 model ExternalLogin {
@@ -23,4 +24,29 @@ model ExternalLogin {
   providerId String
   createdAt DateTime @default(now())
   user      User    @relation(fields: [userId], references: [id])
+}
+
+
+model Card {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  nome      String
+  mensagem  String   @db.Text
+  data      String
+  corTexto  String
+  fonte     String
+  musicUrl  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  images    Image[]  // Relacionamento com a tabela de imagens
+
+  @@index([userId])
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  cardId    Int
+  url       String
+  createdAt DateTime @default(now())
+  card      Card     @relation(fields: [cardId], references: [id])
 }
