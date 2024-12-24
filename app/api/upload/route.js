@@ -21,7 +21,7 @@ export async function POST(request) {
     // Cria um nome único para o arquivo
     const filename = `${Date.now()}-${file.name}`;
     
-    // Define o caminho para a pasta de imagens (ajuste conforme sua estrutura)
+    // Define o caminho para a pasta de imagens
     const filepath = path.join(process.cwd(), 'app/imagens', filename);
 
     // Salva o arquivo

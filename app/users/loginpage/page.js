@@ -12,13 +12,13 @@ export default function LoginPage() {
   const handleLoginEmail = async (e) => {
     e.preventDefault();
     
-    // Aqui você pode implementar a lógica para autenticar com seu servidor
-    // Por exemplo, enviando os dados de email e senha para uma API
+    // TODO implementar a lógica para autenticar com seu servidor
+    // TODO enviar os dados de email e senha para uma API
     console.log('Login com Email:', email, password);
     // Limpeza de campos e erro após tentativa de login
     setEmail('');
     setPassword('');
-    setError('Email ou senha inválidos'); // Simulação de erro
+    setError('Email ou senha inválidos');
   };
 
   // Função para login com Google
