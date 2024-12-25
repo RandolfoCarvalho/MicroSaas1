@@ -1,54 +1,73 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
+  console.log("Webhook recebido.");
+
   try {
+    // Captura o corpo da requisição
     const body = await request.json();
     console.log('Notificação recebida:', body);
 
-    if (body.type === 'payment' && body.data.id) {
+    // Verifica se a notificação é do tipo 'payment.updated' e se contém o 'id' do pagamento
+    if (body.action === 'payment.updated') {
       const paymentId = body.data.id;
 
-      // Consultar detalhes do pagamento na API do Mercado Pago
+      // Consultar a API do Mercado Pago para verificar o status do pagamento
       const paymentDetails = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`
-        }
-      }).then(res => res.json());
+          Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`,
+        },
+      });
 
-      if (paymentDetails.status === 'approved') {
-        console.log('Pagamento aprovado:', paymentDetails);
+      if (!paymentDetails.ok) {
+        throw new Error('Erro ao consultar o pagamento na API do Mercado Pago');
+      }
 
-        // Lógica para criar o cartão
-        const createCardResponse = await fetch('http://localhost:3000/api/cards', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      const paymentData = await paymentDetails.json();
+
+      // Verifica o status do pagamento
+      if (paymentData.status === 'approved') {
+        console.log(`Pagamento aprovado com sucesso: ${paymentId}`);
+        return NextResponse.json({
+          success: true,
+          message: 'Pagamento aprovado com sucesso.',
+          requestData: {
+            action: body.action,
+            api_version: body.api_version,
+            data: body.data,
+            date_created: body.date_created,
+            id: body.id,
+            live_mode: body.live_mode,
+            type: body.type,
+            user_id: body.user_id,
           },
-          body: JSON.stringify({
-            userId: paymentDetails.user_id, // ou outro campo relevante
-            nome: 'Cartão após pagamento',
-            mensagem: 'Obrigado pela compra!',
-            data: new Date().toISOString(),
-            corTexto: '#000000',
-            fonte: 'sans',
-            musicUrl: '',
-            images: [], // Adicione imagens se necessário
-          }),
         });
-
-        if (!createCardResponse.ok) {
-          console.error('Erro ao criar cartão:', await createCardResponse.json());
-        } else {
-          console.log('Cartão criado com sucesso!');
-        }
+      } else if (paymentData.status === 'pending') {
+        console.log(`Pagamento pendente: ${paymentId}`);
+        return NextResponse.json({
+          success: false,
+          message: 'Pagamento ainda pendente.',
+        });
+      } else {
+        console.log(`Pagamento não aprovado. Status: ${paymentData.status}`);
+        return NextResponse.json({
+          success: false,
+          message: `Pagamento não aprovado. Status: ${paymentData.status}`,
+        });
       }
     }
-    return NextResponse.json({ message: 'Notificação processada' });
+
+    // Se a ação ou o tipo não corresponderem, retorna uma resposta com erro
+    console.log("Webhook ignorado: ação ou tipo inválidos.");
+    return NextResponse.json({ success: false, message: 'Ação ou tipo inválidos no webhook.' });
+
   } catch (error) {
+    // Trata erros no processamento do webhook
     console.error('Erro ao processar notificação:', error);
     return NextResponse.json(
       { error: 'Erro ao processar notificação' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -60,50 +60,103 @@ export default function Home() {
     }
   };
   
-  // sucesso do pagamento
-const handlePaymentSuccess = async () => {
-  try {
-    // Agora continue com o pagamento
-    const paymentResponse = await fetch('/api/payment', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        totalAmount: 0.50,
-      }),
-    });
-
-    // Verificar se o status da API é 201
-    if (paymentResponse.status !== 201) {
-      const paymentError = await paymentResponse.json();
-      throw new Error(
-        paymentError.error || 'Erro ao processar pagamento: Status diferente de 201'
-      );
-    }
-
-    const paymentData = await paymentResponse.json();
-    console.log(paymentData);
-    if (!paymentData.qrCode) {
-      throw new Error('Pagamento não autorizado ou QR Code não gerado');
-    }
-
-    // Fechar o modal de pagamento e continuar com o processo de criação do cartão
-    setShowPaymentModal(false);
-
-    // Proseguir com o restante do processo (upload das imagens, música e criação do cartão)
-    alert('Pagamento realizado com sucesso!');
-
-    // Agora chama a função para criar o cartão
-    await createCard();
-  } catch (error) {
-    console.error('Erro detalhado:', error);
-    alert(`Erro ao processar pagamento: ${error.message}`);
-  }
-};
-
+  const VerifyPayment = async (paymentId) => {
+    try {
+      const paymentResponse = await fetch('/api/webhook-mercadopago', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentId }), // Passando paymentId aqui
+      });
   
+      if (paymentResponse.status !== 200) {
+        throw new Error('Erro ao verificar o pagamento');
+      }
+  
+      const data = await paymentResponse.json();
+      
+      if (data.success) {  // Verificando a chave 'success' do webhook
+        console.log('IDs coincidem! O pagamento foi processado com sucesso.');
+        return true; // Pagamento verificado com sucesso
+      } else {
+        console.error('IDs não coincidem. O pagamento não foi verificado corretamente.');
+        return false; // IDs não coincidem
+      }
+    } catch (error) {
+      console.log("Erro no verify payment: ", error);
+      return false;
+    }
+  };
+  
+  
+
+  const handlePaymentSuccess = async () => {
+    try {
+      const paymentResponse = await fetch('/api/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          totalAmount: 0.50,
+        }),
+      });
+  
+      if (paymentResponse.status !== 201) {
+        const paymentError = await paymentResponse.json();
+        throw new Error(paymentError.error || 'Erro ao processar pagamento');
+      }
+  
+      const paymentData = await paymentResponse.json();
+      if (!paymentData.qrCode) {
+        throw new Error('QR Code não gerado');
+      }
+  
+      const paymentApproved = await checkPaymentStatus(paymentData.id);
+      
+      if (paymentApproved) {
+        setShowPaymentModal(false);
+        alert('Pagamento aprovado com sucesso!');
+        await createCard();
+      }
+  
+    } catch (error) {
+      console.error('Erro:', error);
+      alert(`Erro ao processar pagamento: ${error.message}`);
+    }
+  };
+  
+  const checkPaymentStatus = async (paymentId) => {
+    let attempts = 0;
+    const maxAttempts = 30;
+  
+    const pollStatus = () => {
+      return new Promise((resolve, reject) => {
+        const interval = setInterval(async () => {
+          try {
+            const paymentApproved = await VerifyPayment(paymentId);
+            attempts++;
+            
+            if (paymentApproved) {
+              clearInterval(interval);
+              resolve(true);
+            } else if (attempts >= maxAttempts) {
+              clearInterval(interval);
+              reject(new Error('Tempo limite de verificação excedido'));
+            }
+          } catch (error) {
+            clearInterval(interval);
+            reject(error);
+          }
+        }, 2000);
+      });
+    };
+  
+    return pollStatus();
+  };
+
   // Função para criar o cartão
   const createCard = async () => {
     try {
@@ -195,19 +248,16 @@ const handlePaymentSuccess = async () => {
       alert(`Erro ao criar cartão: ${error.message}`);
     }
   };
-  
-  // Função handleSubmit (que agora apenas chama a lógica de pagamento)
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Verificar se o usuário está autenticado
     verifyAuth();
     verifyAuth();
     if (!isAuthenticated) {
       setIsModalVisible(true);
       console.log(isAuthenticated)
-      return; // Se não estiver autenticado, o modal de login será exibido
+      return;
     }
-    // Caso o usuário esteja autenticado, prosseguir com o pagamento
     setShowPaymentModal(true);
   };
 
@@ -238,7 +288,7 @@ const handlePaymentSuccess = async () => {
   const removeImage = (indexToRemove) => {
     setImages(prev => prev.filter((_, index) => index !== indexToRemove));
   };
-
+ 
   useEffect(() => {
     //verifyAuth();
     const createHeart = () => {

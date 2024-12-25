@@ -27,7 +27,7 @@ export default function PaymentForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: fixedAmount, // Usando o valor fixo de 9,90
+          amount: fixedAmount,
           email
         }),
       });

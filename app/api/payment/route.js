@@ -10,17 +10,15 @@ export async function POST(request) {
       accessToken: 'APP_USR-6663323588277121-122418-03ef4130f63abcc1fdf40a79fd05592b-482914930',
       options: { timeout: 5000 }
     });
-
-    // Inicialize a instância de pagamento
     const payment = new Payment(client);
 
-    // Dados do pagamento, sem o campo 'token' para Pix
+    // Cria o pagamento com essas informações
     const paymentData = {
-      transaction_amount: 0.15,
+      transaction_amount: 0.01,
       description: 'Pagamento via PIX',
       payment_method_id: 'pix',
       payer: {
-        email: body.email || 'email@example.com', // Garantir que o email seja passado corretamente
+        email: body.email || 'email@example.com',
         first_name: 'Test',
         last_name: 'User',
       },

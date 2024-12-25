@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 
+// Constants
+const POLLING_MAX_ATTEMPTS = 30; // 1 minute maximum (30 attempts * 2 seconds)
+const POLLING_INTERVAL = 2000; // 2 seconds
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -21,27 +25,9 @@ export async function GET(request) {
       );
     }
 
-    console.log(`Consultando pagamento ID: ${id}`);
-
-    const response = await fetch(`https://api.mercadopago.com/v1/payments/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { message: data.message || 'Erro na consulta do pagamento' },
-        { status: response.status }
-      );
-    }
-
-    return NextResponse.json(data);
+    // Check payment status
+    const paymentStatus = await checkPaymentStatus(id, accessToken);
+    return NextResponse.json(paymentStatus);
 
   } catch (error) {
     console.error('Erro na requisição:', error);
@@ -50,4 +36,30 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+}
+
+async function checkPaymentStatus(paymentId, accessToken) {
+  const consultPayment = async () => {
+    console.log(`Consultando pagamento ID: ${paymentId}`);
+    const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Falha ao consultar status do pagamento');
+    }
+
+    return await response.json();
+  };
+
+  const data = await consultPayment();
+  return {
+    status: data.status,
+    isApproved: data.status === 'approved'
+  };
 }
