@@ -50,14 +50,14 @@ const CartoesPage = () => {
               <div className="w-full bg-gradient-to-r from-red-500/5 to-pink-500/5 p-8 rounded-lg border border-red-500/10 backdrop-blur-md">
                 {card.images?.length > 0 && (
                   <div className="grid grid-cols-2 gap-2 mb-4">
-                    {card.images.map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`Imagem ${index + 1}`}
-                        className="w-full h-32 object-cover rounded"
-                      />
-                    ))}
+                      {card.images?.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image.url} // Mudança aqui: acessar image.url ao invés de image diretamente
+                          alt={`Imagem ${index + 1}`}
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      ))}
                   </div>
                 )}
 

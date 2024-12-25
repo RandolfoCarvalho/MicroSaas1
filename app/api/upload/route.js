@@ -22,7 +22,7 @@ export async function POST(request) {
     const filename = `${Date.now()}-${file.name}`;
     
     // Define o caminho para a pasta de imagens
-    const filepath = path.join(process.cwd(), 'app/imagens', filename);
+    const filepath = path.join(process.cwd(), 'app/public/imagens', filename);
 
     // Salva o arquivo
     await writeFile(filepath, buffer);

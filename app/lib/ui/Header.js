@@ -19,7 +19,7 @@ export default function Header() {
               <span className="material-icons">menu</span> {/* Ícone do menu */}
             </button>
           </div>
-
+  
           {/* Mobile menu */}
           {menuOpen && (
             <div className="lg:hidden absolute top-16 left-0 w-full bg-red-500 bg-opacity-75">
@@ -51,7 +51,7 @@ export default function Header() {
               </ul>
             </div>
           )}
-
+  
           {/* Desktop navigation */}
           <nav className="hidden lg:flex space-x-4">
             <ul className="flex space-x-4">
@@ -85,4 +85,4 @@ export default function Header() {
       </div>
     </header>
   );
-}
+}  

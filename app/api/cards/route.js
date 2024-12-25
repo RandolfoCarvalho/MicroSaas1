@@ -3,44 +3,62 @@ import { NextResponse } from 'next/server';
 import prisma from '../../../prisma/prisma';
 
 // Função para lidar com POST (criar um cartão)
+// app/api/cards/route.js
 export async function POST(request) {
   try {
     const data = await request.json();
+    console.log('Dados recebidos:', data); // Para debug
+
+    // Validação dos dados
+    if (!data.userId || !data.nome || !data.mensagem || !data.data) {
+      return NextResponse.json(
+        { error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se images existe antes de tentar mapear
+    const createData = {
+      userId: data.userId,
+      nome: data.nome,
+      mensagem: data.mensagem,
+      data: data.data,
+      corTexto: data.corTexto || '#000000', // valor padrão se não fornecido
+      fonte: data.fonte || 'Arial', // valor padrão se não fornecido
+      musicUrl: data.musicUrl || '', // valor padrão se não fornecido
+    };
+
+    // Só adiciona images se existir
+    if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+      createData.images = {
+        create: data.images.map((url) => ({ url }))
+      };
+    }
 
     const card = await prisma.card.create({
-      data: {
-        userId: data.userId,
-        nome: data.nome,
-        mensagem: data.mensagem,
-        data: data.data,
-        corTexto: data.corTexto,
-        fonte: data.fonte,
-        musicUrl: data.musicUrl,
-        images: {
-          create: data.images.map((url) => ({
-            url,
-          })),
-        },
-      },
+      data: createData,
+      include: {
+        images: true // Incluir imagens na resposta
+      }
     });
 
     return NextResponse.json(card);
   } catch (error) {
-    console.error('Error in POST:', error);
+    console.error('Erro detalhado:', error); // Log do erro completo
     return NextResponse.json(
-      { error: 'Error creating card' },
+      { error: error.message || 'Error creating card' },
       { status: 500 }
     );
   }
 }
 
 // Função para lidar com GET (listar cartões)
+// app/api/cards/route.js
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    // Validação de userId
     if (userId && isNaN(Number(userId))) {
       return NextResponse.json(
         { error: 'Invalid userId format. Must be a number.' },
@@ -48,28 +66,23 @@ export async function GET(request) {
       );
     }
 
-    // Buscar os cartões do banco de dados
     const cards = await prisma.card.findMany({
-      where: userId ? { userId: Number(userId) } : {}, // Filtra por userId se fornecido
+      where: userId ? { userId: Number(userId) } : {},
       include: {
-        images: true, // Inclui as imagens associadas
+        images: {
+          select: {
+            url: true,
+            id: true
+          }
+        }
       },
     });
+    const cardsWithFormattedImages = cards.map(card => ({
+      ...card,
+      images: card.images.map(image => `../../public/imagens/${image.url}`)
+    }));
 
-    // Adicionar o caminho completo das imagens
-    const cardsWithImages = cards.map(card => {
-      const imagesWithFullPath = card.images.map(image => ({
-        ...image,
-        url: `../../imagens/${image.url}`, // Gera o caminho completo para as imagens
-      }));
-
-      return {
-        ...card,
-        images: imagesWithFullPath, // Substitui as imagens com o caminho completo
-      };
-    });
-
-    return NextResponse.json(cardsWithImages);
+    return NextResponse.json(cardsWithFormattedImages);
   } catch (error) {
     console.error('Error in GET:', error);
     return NextResponse.json(
@@ -78,3 +91,4 @@ export async function GET(request) {
     );
   }
 }
+

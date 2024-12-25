@@ -45,64 +45,99 @@ export default function Home() {
   // Função para enviar o cartão para o banco de dados
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    
     try {
-      // Upload das imagens
-      const imageUrls = await Promise.all(
-        images.map(async (img) => {
-          const blob = await fetch(img.url).then(r => r.blob());
+      // Primeiro, fazer upload das imagens se houverem
+      let imageUrls = [];
+      if (images.length > 0) {
+        for (const img of images) {
+          // Criar FormData para cada imagem
           const formData = new FormData();
+          
+          // Se img.url é um Blob URL, precisamos pegar o arquivo original
+          const response = await fetch(img.url);
+          const blob = await response.blob();
+          
           formData.append('file', blob, img.name);
   
-          const response = await fetch('/api/upload', {
+          const uploadResponse = await fetch('/api/upload', {
             method: 'POST',
             body: formData
           });
   
-          const data = await response.json();
-          return data.url;
-        })
-      );
+          if (!uploadResponse.ok) {
+            throw new Error('Erro ao fazer upload da imagem');
+          }
   
-      // Upload da música
+          const data = await uploadResponse.json();
+          imageUrls.push(data.url);
+        }
+      }
+  
+      // Upload da música se existir
       let musicUrl = '';
       if (formData.musicUrl) {
-        const musicBlob = await fetch(formData.musicUrl).then(r => r.blob());
+        const musicResponse = await fetch(formData.musicUrl);
+        const musicBlob = await musicResponse.blob();
         const musicFormData = new FormData();
         musicFormData.append('file', musicBlob, 'music.mp3');
   
-        const musicResponse = await fetch('/api/upload', {
+        const uploadMusicResponse = await fetch('/api/upload', {
           method: 'POST',
           body: musicFormData
         });
   
-        const musicData = await musicResponse.json();
+        if (!uploadMusicResponse.ok) {
+          throw new Error('Erro ao fazer upload da música');
+        }
+  
+        const musicData = await uploadMusicResponse.json();
         musicUrl = musicData.url;
       }
   
-      // Criar o cartão no banco de dados
-      const response = await fetch('/api/cards', {
+      // Agora criar o cartão com as URLs dos arquivos já upados
+      const cardResponse = await fetch('/api/cards', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: 1,
-          ...formData,
-          musicUrl,
+          userId: 1, // Certifique-se que este userId existe no banco
+          nome: formData.nome,
+          mensagem: formData.mensagem,
+          data: formData.data,
+          corTexto: formData.corTexto,
+          fonte: formData.fonte,
+          musicUrl: musicUrl,
           images: imageUrls,
         }),
       });
   
-      if (response.ok) {
-        alert('Cartão criado com sucesso!');
-        // Limpar o formulário ou redirecionar
-      } else {
-        throw new Error('Erro ao criar cartão');
+      if (!cardResponse.ok) {
+        const errorData = await cardResponse.json();
+        throw new Error(errorData.error || 'Erro ao criar cartão');
       }
+  
+      // Se chegou aqui, deu tudo certo
+      alert('Cartão criado com sucesso!');
+      // Limpar o formulário
+      setFormData({
+        nome: '',
+        mensagem: '',
+        data: '',
+        corTexto: '#ff0000',
+        fonte: 'sans',
+        musicUrl: '',
+      });
+      setImages([]);
+      setIsPlaying(false);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+  
     } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao criar cartão');
+      console.error('Erro detalhado:', error);
+      alert(`Erro ao criar cartão: ${error.message}`);
     }
   };
 
