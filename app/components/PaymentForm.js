@@ -4,12 +4,14 @@ import { useState } from 'react';
 import './PaymentForm.css';
 
 export default function PaymentForm() {
-  const [amount, setAmount] = useState('');
   const [pixUrl, setPixUrl] = useState(null);
   const [pixCode, setPixCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [error, setError] = useState(null);
+
+  // Definir o valor fixo de R$ 9,90
+  const fixedAmount = 0.5;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,9 +26,9 @@ export default function PaymentForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          amount: parseFloat(amount), 
-          email 
+        body: JSON.stringify({
+          amount: fixedAmount, // Usando o valor fixo de 9,90
+          email
         }),
       });
 
@@ -54,16 +56,7 @@ export default function PaymentForm() {
     <div className="payment-form">
       <form onSubmit={handleSubmit} className="form-container">
         <label>
-          <span>Valor:</span>
-          <input
-            type="number"
-            step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            className="input-field"
-            min="0.01"
-          />
+          <span>Valor: {fixedAmount}</span>
         </label>
 
         <label>
@@ -91,16 +84,16 @@ export default function PaymentForm() {
       {pixUrl && (
         <div className="pix-url">
           <h3>QR Code do PIX</h3>
-          <img 
-            src={`data:image/jpeg;base64,${pixUrl}`} 
-            alt="QR Code do PIX" 
-            className="pix-image" 
+          <img
+            src={`data:image/jpeg;base64,${pixUrl}`}
+            alt="QR Code do PIX"
+            className="pix-image"
           />
           {pixCode && (
             <div className="pix-code">
               <h4>Código PIX:</h4>
-              <textarea 
-                readOnly 
+              <textarea
+                readOnly
                 value={pixCode}
                 className="pix-code-text"
                 onClick={(e) => e.target.select()}

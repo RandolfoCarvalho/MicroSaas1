@@ -3,8 +3,26 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
+import useAuthVerification from './hooks/useAuthVerification';
+import LoginModal from './components/loginModal';
+import PaymentForm from './components/PaymentForm';
 
 export default function Home() {
+  const {
+    isAuthenticated,
+    isModalVisible,
+    verifyAuth,
+    closeModal,
+    setIsModalVisible,
+  } = useAuthVerification();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Lógica para renderizar no cliente
+    }
+  }, []);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const [formData, setFormData] = useState({
     nome: '',
     mensagem: '',
@@ -42,22 +60,60 @@ export default function Home() {
     }
   };
   
-  // Função para enviar o cartão para o banco de dados
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  // sucesso do pagamento
+const handlePaymentSuccess = async () => {
+  try {
+    // Agora continue com o pagamento
+    const paymentResponse = await fetch('/api/payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        totalAmount: 0.50,
+      }),
+    });
+
+    // Verificar se o status da API é 201
+    if (paymentResponse.status !== 201) {
+      const paymentError = await paymentResponse.json();
+      throw new Error(
+        paymentError.error || 'Erro ao processar pagamento: Status diferente de 201'
+      );
+    }
+
+    const paymentData = await paymentResponse.json();
+    console.log(paymentData);
+    if (!paymentData.qrCode) {
+      throw new Error('Pagamento não autorizado ou QR Code não gerado');
+    }
+
+    // Fechar o modal de pagamento e continuar com o processo de criação do cartão
+    setShowPaymentModal(false);
+
+    // Proseguir com o restante do processo (upload das imagens, música e criação do cartão)
+    alert('Pagamento realizado com sucesso!');
+
+    // Agora chama a função para criar o cartão
+    await createCard();
+  } catch (error) {
+    console.error('Erro detalhado:', error);
+    alert(`Erro ao processar pagamento: ${error.message}`);
+  }
+};
+
+  
+  // Função para criar o cartão
+  const createCard = async () => {
     try {
       // Primeiro, fazer upload das imagens se houverem
       let imageUrls = [];
       if (images.length > 0) {
         for (const img of images) {
-          // Criar FormData para cada imagem
           const formData = new FormData();
-          
-          // Se img.url é um Blob URL, precisamos pegar o arquivo original
           const response = await fetch(img.url);
           const blob = await response.blob();
-          
           formData.append('file', blob, img.name);
   
           const uploadResponse = await fetch('/api/upload', {
@@ -95,7 +151,7 @@ export default function Home() {
         musicUrl = musicData.url;
       }
   
-      // Agora criar o cartão com as URLs dos arquivos já upados
+      // Criar o cartão com as URLs dos arquivos já upados
       const cardResponse = await fetch('/api/cards', {
         method: 'POST',
         headers: {
@@ -134,12 +190,27 @@ export default function Home() {
       if (audioRef.current) {
         audioRef.current.pause();
       }
-  
     } catch (error) {
       console.error('Erro detalhado:', error);
       alert(`Erro ao criar cartão: ${error.message}`);
     }
   };
+  
+  // Função handleSubmit (que agora apenas chama a lógica de pagamento)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Verificar se o usuário está autenticado
+    verifyAuth();
+    verifyAuth();
+    if (!isAuthenticated) {
+      setIsModalVisible(true);
+      console.log(isAuthenticated)
+      return; // Se não estiver autenticado, o modal de login será exibido
+    }
+    // Caso o usuário esteja autenticado, prosseguir com o pagamento
+    setShowPaymentModal(true);
+  };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -169,6 +240,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    //verifyAuth();
     const createHeart = () => {
       const heart = document.createElement('div');
       heart.className = 'absolute animate-float text-red-500';
@@ -464,6 +536,21 @@ export default function Home() {
                 Criar Cartão de Amor ❤️
               </button>
             </form>
+            {isModalVisible && (
+            <LoginModal isVisible={isModalVisible} closeModal={closeModal} />
+          )}
+          {showPaymentModal && (
+            <div className="modal-overlay">
+              <div 
+                className="modal-content"
+                style={{ color: 'black', fontFamily: 'Arial, sans-serif' }}
+              >
+                <h3 style={{ color: 'black' }}>Por favor, complete o pagamento</h3>
+                <PaymentForm onSuccess={handlePaymentSuccess} /> {/* Exibindo PaymentPage */}
+                <button onClick={() => setShowPaymentModal(false)}>Fechar</button>
+              </div>
+            </div>
+          )}
           </div>
 
           {/* Preview Side */}

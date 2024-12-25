@@ -11,7 +11,11 @@ export default function Header() {
     <header className="fixed top-0 left-0 w-full bg-red-500 bg-opacity-50 text-white shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="text-lg font-bold">Meu App</div>
+          <div className="text-lg font-bold">
+            <a href="/" className="hover:underline">
+                Home
+              </a>
+            </div>
           
           {/* Mobile menu button */}
           <div className="lg:hidden">

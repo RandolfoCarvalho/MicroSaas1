@@ -2,6 +2,7 @@
 import { signIn, useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
@@ -9,6 +10,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Verificar o parâmetro de sucesso na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const authStatus = urlParams.get('authStatus');
+
+    if (authStatus === 'success') {
+      // Fechar a janela após sucesso na autenticação
+      window.close();
+    }
+  }, []);
 
   // Função para lidar com o login usando email e senha
   const handleLoginEmail = async (e) => {

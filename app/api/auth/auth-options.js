@@ -39,7 +39,7 @@ export const authOptions = {
     }),
   ],
   pages: {
-    signIn: "/users/LoginPage",
+    signIn: "/users/LoginPage", // Página de login personalizada
   },
   callbacks: {
     async session({ session, token }) {
@@ -93,6 +93,15 @@ export const authOptions = {
       }
 
       return true;
+    },
+
+    // Adicionar o callback de redirecionamento
+    async redirect({ url, baseUrl }) {
+      // Quando a autenticação do Google for bem-sucedida, redireciona com o parâmetro de sucesso
+      if (url.includes('/api/auth/callback/google')) {
+        return `${baseUrl}/?authStatus=success`; // Adiciona o parâmetro authStatus à URL
+      }
+      return baseUrl; // Redireciona para a URL base em outros casos
     },
   },
   session: {
