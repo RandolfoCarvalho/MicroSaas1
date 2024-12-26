@@ -132,8 +132,8 @@ export default function Home() {
     try {
       console.log("Iniciando geração de QR Code...");
       console.log("Payment id finalmente: " + data.paymentId)
-
       checkPaymentStatus(data.paymentId);
+
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
       alert(`Erro ao gerar QR Code: ${error.message}`);
@@ -210,9 +210,11 @@ export default function Home() {
         throw new Error(errorData.error || 'Erro ao criar cartão');
       }
   
+      const cardData = await cardResponse.json(); // Aqui você obtém o ID do cartão criado
+      const cardId = cardData.id;
       // Se chegou aqui, deu tudo certo
       setShowSuccessMessage(true);
-      window.location.href = '/users/cartoes';
+      window.location.href = `/users/cards/${cardId}`;
       // Limpar o formulário
       setFormData({
         nome: '',
