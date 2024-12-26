@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardFooter } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
+import { useSession } from "next-auth/react";
 import { Share, Download, QrCode } from "lucide-react"
 import {
   DropdownMenu,
@@ -13,19 +14,26 @@ import {
 const CartoesPage = () => {
   const [cards, setCards] = useState([]);
   const [error, setError] = useState(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    fetch('../../api/cards?userId=1')
-      .then((res) => {
-        if (!res.ok) throw new Error('Erro ao buscar os cartões');
-        return res.json();
-      })
-      .then(setCards)
-      .catch((err) => {
-        console.error(err);
-        setError(err.message);
-      });
-  }, []);
+    if (session?.user?.id) {
+      fetch(`../../api/cards?userId=1`)
+        .then((res) => {
+          console.log('Raw Response:', session.user); // Exibe a resposta crua
+          return res.json();
+        })
+        .then((data) => {
+          console.log('API Response:', data); // Debug
+          setCards(data);
+        })
+        .catch((err) => {
+          console.error('API Error:', err); // Debug
+          setError(err.message);
+        });
+    }
+  }, [session]);
+  
 
   if (error) {
     return (

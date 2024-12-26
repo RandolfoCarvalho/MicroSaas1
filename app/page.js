@@ -7,7 +7,7 @@ import useAuthVerification from './hooks/useAuthVerification';
 import LoginModal from './components/loginModal';
 import PaymentForm from './components/PaymentForm';
 import SuccessMessage from './components/ui/SuccessMessage';
-
+import { redirect } from 'next/dist/server/api-utils';
 
 export default function Home() {
   console.log("Componente renderizado");
@@ -95,7 +95,7 @@ export default function Home() {
   const checkPaymentStatus = async (paymentId) => {
     console.log('Iniciando checkPaymentStatus para ID:', paymentId);
     let attempts = 0;
-    const maxAttempts = 100;
+    const maxAttempts = 500;
   
     const pollStatus = () => {
       return new Promise((resolve, reject) => {
@@ -132,28 +132,8 @@ export default function Home() {
     try {
       console.log("Iniciando geração de QR Code...");
       console.log("Payment id finalmente: " + data.paymentId)
-      const paymentResponse = await fetch('/api/webhook-mercadopago', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          totalAmount: 0.10,
-        }),
-      });
 
-      console.log("Chamando verifyStatus");
       checkPaymentStatus(data.paymentId);
-      if (!paymentResponse.ok || !paymentData.qrCode) {
-        throw new Error('Erro ao gerar o QR Code.');
-      }
-  
-      console.log('QR Code gerado com sucesso:', paymentData.qrCode);
-      alert('QR Code gerado. Aguarde a confirmação do pagamento.');
-  
-      // Exiba o QR Code na interface (exemplo simples)
-      setQrCode(paymentData.qrCode);
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
       alert(`Erro ao gerar QR Code: ${error.message}`);
@@ -232,7 +212,7 @@ export default function Home() {
   
       // Se chegou aqui, deu tudo certo
       setShowSuccessMessage(true);
-
+      window.location.href = '/users/cartoes';
       // Limpar o formulário
       setFormData({
         nome: '',
