@@ -6,6 +6,8 @@ import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
 import useAuthVerification from './hooks/useAuthVerification';
 import LoginModal from './components/loginModal';
 import PaymentForm from './components/PaymentForm';
+import SuccessMessage from './components/ui/SuccessMessage';
+
 
 export default function Home() {
   console.log("Componente renderizado");
@@ -16,7 +18,7 @@ export default function Home() {
     closeModal,
     setIsModalVisible,
   } = useAuthVerification();
-  
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -78,7 +80,7 @@ export default function Home() {
       if (paymentData.status === 'approved') {
         console.log('Pagamento aprovado!');
         console.log('deu certo'); // Novo console.log adicionado
-        await createCard(); // Chamada do createCard após confirmação do pagamento
+        await createCard();
         return true;
       }
       console.log('Pagamento ainda pendente');
@@ -229,7 +231,8 @@ export default function Home() {
       }
   
       // Se chegou aqui, deu tudo certo
-      alert('Cartão criado com sucesso!');
+      setShowSuccessMessage(true);
+
       // Limpar o formulário
       setFormData({
         nome: '',
@@ -438,10 +441,15 @@ export default function Home() {
   };
 
   return (
+    
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white relative overflow-hidden">
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/50 z-0" />
-      
+      {showSuccessMessage && (
+      <SuccessMessage 
+        onClose={() => setShowSuccessMessage(false)} 
+      />
+    )}
       {/* Hearts container */}
       <div id="hearts-container" className="fixed inset-0 pointer-events-none z-10" />
       
