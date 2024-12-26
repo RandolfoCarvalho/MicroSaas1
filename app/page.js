@@ -600,11 +600,17 @@ export default function Home() {
             <LoginModal isVisible={isModalVisible} closeModal={closeModal} />
           )}
           {showPaymentModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h3>Por favor, complete o pagamento</h3>
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+            <div className="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+              <h3 className="text-xl font-semibold mb-4">Por favor, complete o pagamento</h3>
               <PaymentForm onSuccess={handleGenerateQrCode} />
-              <button onClick={() => setShowPaymentModal(false)}>Fechar</button>
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+              >
+                Fechar
+              </button>
             </div>
           </div>
         )}

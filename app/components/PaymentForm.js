@@ -58,52 +58,75 @@ export default function PaymentForm({ onSuccess }) {
   };
 
   return (
-    <div className="payment-form">
-      <form onSubmit={handleSubmit} className="form-container">
-        <label>
-          <span>Valor: {fixedAmount}</span>
-        </label>
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <div className="text-sm text-gray-600">Valor a pagar</div>
+          <div className="text-2xl font-bold text-gray-900">R$ {fixedAmount}</div>
+        </div>
 
-        <label>
-          <span>E-mail:</span>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            E-mail para comprovante
+          </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ color: 'black' }}
-            className="input-field"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+            placeholder="seu@email.com"
           />
-        </label>
+        </div>
 
-        <button type="submit" disabled={loading} className="submit-button">
-          {loading ? 'Carregando...' : 'Gerar pagamento PIX'}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-150 ease-in-out disabled:opacity-50"
+        >
+          {loading ? 'Gerando PIX...' : 'Gerar PIX'}
         </button>
       </form>
 
       {error && (
-        <div className="error-message" style={{ color: 'red', marginTop: '10px' }}>
-          {error}
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
       {pixUrl && (
-        <div className="pix-url">
-          <h3>QR Code do PIX</h3>
-          <img
-            src={`data:image/jpeg;base64,${pixUrl}`}
-            alt="QR Code do PIX"
-            className="pix-image"
-          />
-          {pixCode && (
-            <div className="pix-code">
-              <h4>Código PIX:</h4>
-              <textarea
-                readOnly
-                value={pixCode}
-                className="pix-code-text"
-                onClick={(e) => e.target.select()}
+        <div className="mt-8 space-y-6">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">QR Code PIX</h3>
+            <div className="bg-gray-50 p-4 rounded-lg inline-block">
+              <img
+                src={`data:image/jpeg;base64,${pixUrl}`}
+                alt="QR Code do PIX"
+                className="mx-auto w-48 h-48"
               />
+            </div>
+          </div>
+
+          {pixCode && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-700">Código PIX copia e cola</h4>
+              <div className="relative">
+                <textarea
+                  readOnly
+                  value={pixCode}
+                  onClick={(e) => e.target.select()}
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono text-black"
+                  rows={3}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <button
+                    onClick={() => navigator.clipboard.writeText(pixCode)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
