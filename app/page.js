@@ -8,6 +8,7 @@ import LoginModal from './components/loginModal';
 import PaymentForm from './components/PaymentForm';
 
 export default function Home() {
+  console.log("Componente renderizado");
   const {
     isAuthenticated,
     isModalVisible,
@@ -15,12 +16,7 @@ export default function Home() {
     closeModal,
     setIsModalVisible,
   } = useAuthVerification();
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Lógica para renderizar no cliente
-    }
-  }, []);
+  
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -62,91 +58,64 @@ export default function Home() {
   
   const VerifyPayment = async (paymentId) => {
     try {
-      const paymentResponse = await fetch('/api/webhook-mercadopago', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ paymentId }), // Passando paymentId aqui
-      });
-  
-      if (paymentResponse.status !== 200) {
-        throw new Error('Erro ao verificar o pagamento');
-      }
-  
-      const data = await paymentResponse.json();
+      console.log('Iniciando verificação para paymentId:', paymentId);
       
-      if (data.success) {  // Verificando a chave 'success' do webhook
-        console.log('IDs coincidem! O pagamento foi processado com sucesso.');
-        return true; // Pagamento verificado com sucesso
-      } else {
-        console.error('IDs não coincidem. O pagamento não foi verificado corretamente.');
-        return false; // IDs não coincidem
-      }
-    } catch (error) {
-      console.log("Erro no verify payment: ", error);
-      return false;
-    }
-  };
-  
-  
-
-  const handlePaymentSuccess = async () => {
-    try {
-      const paymentResponse = await fetch('/api/payment', {
-        method: 'POST',
+      const paymentResponse = await fetch(`/api/getPaymentStatus?id=${paymentId}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.email,
-          totalAmount: 0.50,
-        }),
       });
   
-      if (paymentResponse.status !== 201) {
-        const paymentError = await paymentResponse.json();
-        throw new Error(paymentError.error || 'Erro ao processar pagamento');
+      if (!paymentResponse.ok) {
+        console.error('Resposta não ok do getPaymentStatus');
+        throw new Error('Erro ao consultar o pagamento');
       }
   
       const paymentData = await paymentResponse.json();
-      if (!paymentData.qrCode) {
-        throw new Error('QR Code não gerado');
-      }
+      console.log('Status do pagamento:', paymentData.status);
   
-      const paymentApproved = await checkPaymentStatus(paymentData.id);
+      if (paymentData.status === 'approved') {
+        console.log('Pagamento aprovado!');
+        console.log('deu certo'); // Novo console.log adicionado
+        await createCard(); // Chamada do createCard após confirmação do pagamento
+        return true;
+      }
+      console.log('Pagamento ainda pendente');
+      return false;
       
-      if (paymentApproved) {
-        setShowPaymentModal(false);
-        alert('Pagamento aprovado com sucesso!');
-        await createCard();
-      }
-  
     } catch (error) {
-      console.error('Erro:', error);
-      alert(`Erro ao processar pagamento: ${error.message}`);
+      console.error('Erro em VerifyPayment:', error);
+      return false;
     }
   };
-  
+
   const checkPaymentStatus = async (paymentId) => {
+    console.log('Iniciando checkPaymentStatus para ID:', paymentId);
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 100;
   
     const pollStatus = () => {
       return new Promise((resolve, reject) => {
+        console.log('Iniciando polling');
         const interval = setInterval(async () => {
           try {
-            const paymentApproved = await VerifyPayment(paymentId);
             attempts++;
+            console.log(`Tentativa ${attempts} de ${maxAttempts}`);
+            console.log(`Status pagamento: ${paymentId}`)
+            const paymentApproved = await VerifyPayment(paymentId);
             
             if (paymentApproved) {
+              console.log('Pagamento aprovado - encerrando polling');
               clearInterval(interval);
               resolve(true);
             } else if (attempts >= maxAttempts) {
+              console.log('Tempo limite excedido');
               clearInterval(interval);
               reject(new Error('Tempo limite de verificação excedido'));
             }
           } catch (error) {
+            console.error('Erro no polling:', error);
             clearInterval(interval);
             reject(error);
           }
@@ -157,6 +126,38 @@ export default function Home() {
     return pollStatus();
   };
 
+  const handleGenerateQrCode = async (data) => {
+    try {
+      console.log("Iniciando geração de QR Code...");
+      console.log("Payment id finalmente: " + data.paymentId)
+      const paymentResponse = await fetch('/api/webhook-mercadopago', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          totalAmount: 0.10,
+        }),
+      });
+
+      console.log("Chamando verifyStatus");
+      checkPaymentStatus(data.paymentId);
+      if (!paymentResponse.ok || !paymentData.qrCode) {
+        throw new Error('Erro ao gerar o QR Code.');
+      }
+  
+      console.log('QR Code gerado com sucesso:', paymentData.qrCode);
+      alert('QR Code gerado. Aguarde a confirmação do pagamento.');
+  
+      // Exiba o QR Code na interface (exemplo simples)
+      setQrCode(paymentData.qrCode);
+    } catch (error) {
+      console.error('Erro ao gerar QR Code:', error);
+      alert(`Erro ao gerar QR Code: ${error.message}`);
+    }
+  };
+  
   // Função para criar o cartão
   const createCard = async () => {
     try {
@@ -258,7 +259,8 @@ export default function Home() {
       console.log(isAuthenticated)
       return;
     }
-    setShowPaymentModal(true);
+    await setShowPaymentModal(true);
+    handleGenerateQrCode();
   };
 
 
@@ -590,17 +592,14 @@ export default function Home() {
             <LoginModal isVisible={isModalVisible} closeModal={closeModal} />
           )}
           {showPaymentModal && (
-            <div className="modal-overlay">
-              <div 
-                className="modal-content"
-                style={{ color: 'black', fontFamily: 'Arial, sans-serif' }}
-              >
-                <h3 style={{ color: 'black' }}>Por favor, complete o pagamento</h3>
-                <PaymentForm onSuccess={handlePaymentSuccess} /> {/* Exibindo PaymentPage */}
-                <button onClick={() => setShowPaymentModal(false)}>Fechar</button>
-              </div>
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Por favor, complete o pagamento</h3>
+              <PaymentForm onSuccess={handleGenerateQrCode} />
+              <button onClick={() => setShowPaymentModal(false)}>Fechar</button>
             </div>
-          )}
+          </div>
+        )}
           </div>
 
           {/* Preview Side */}

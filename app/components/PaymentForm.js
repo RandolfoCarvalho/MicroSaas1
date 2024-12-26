@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import './PaymentForm.css';
 
-export default function PaymentForm() {
+export default function PaymentForm({ onSuccess }) {
   const [pixUrl, setPixUrl] = useState(null);
   const [pixCode, setPixCode] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [paymentId, setPaymentId] = useState(null);
   const [email, setEmail] = useState('');
   const [error, setError] = useState(null);
 
@@ -33,7 +34,7 @@ export default function PaymentForm() {
       });
 
       const data = await response.json();
-
+      console.log("Data:", JSON.stringify(data.paymentId, null, 2));
       if (!response.ok) {
         throw new Error(data.error || `Erro do servidor: ${response.status}`);
       }
@@ -41,6 +42,10 @@ export default function PaymentForm() {
       if (data.url) {
         setPixUrl(data.url);
         setPixCode(data.qrCode);
+        setPaymentId(data.paymentId);
+        if (onSuccess) {
+          onSuccess({ url: data.url, qrCode: data.qrCode, paymentId:  data.paymentId });
+        }
       } else {
         setError('Resposta inválida do servidor');
       }
@@ -66,6 +71,7 @@ export default function PaymentForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            style={{ color: 'black' }}
             className="input-field"
           />
         </label>

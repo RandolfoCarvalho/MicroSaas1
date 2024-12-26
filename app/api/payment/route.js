@@ -14,7 +14,7 @@ export async function POST(request) {
 
     // Cria o pagamento com essas informações
     const paymentData = {
-      transaction_amount: 0.01,
+      transaction_amount: 0.15,
       description: 'Pagamento via PIX',
       payment_method_id: 'pix',
       payer: {
@@ -32,7 +32,7 @@ export async function POST(request) {
 
       // Verificar se o status em `api_response` é 201
       if (response.api_response?.status === 201) {
-        console.log('Pagamento bem-sucedido! Status 201 recebido da API do MercadoPago.');
+        console.log('Pagamento Recebido e esta pendente');
       } else {
         console.warn('Status diferente de 201 recebido:', response.api_response?.status);
         throw new Error('Pagamento não processado corretamente.');
