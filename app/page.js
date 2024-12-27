@@ -212,9 +212,10 @@ export default function Home() {
   
       const cardData = await cardResponse.json(); // Aqui você obtém o ID do cartão criado
       const cardId = cardData.id;
+      const cardNome = encodeURIComponent(cardData.nome);
       // Se chegou aqui, deu tudo certo
       setShowSuccessMessage(true);
-      window.location.href = `/users/cards/${cardId}`;
+      window.location.href = `/card/${cardId}-${cardNome}`;
       // Limpar o formulário
       setFormData({
         nome: '',

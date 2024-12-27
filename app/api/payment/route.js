@@ -14,7 +14,7 @@ export async function POST(request) {
 
     // Cria o pagamento com essas informações
     const paymentData = {
-      transaction_amount: 0.02,
+      transaction_amount: 0.2,
       description: 'Pagamento via PIX',
       payment_method_id: 'pix',
       payer: {
@@ -25,7 +25,7 @@ export async function POST(request) {
     };
 
     console.log('Enviando dados de pagamento:', paymentData);
-
+ 
     try {
       const response = await payment.create({ body: paymentData });
       console.log('Resposta completa do MercadoPago:', JSON.stringify(response, null, 2));

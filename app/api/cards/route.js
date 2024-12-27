@@ -25,7 +25,7 @@ export async function POST(request) {
       data: data.data,
       corTexto: data.corTexto || '#000000', // valor padrão se não fornecido
       fonte: data.fonte || 'Arial', // valor padrão se não fornecido
-      musicUrl: data.musicUrl || '', // valor padrão se não fornecido
+      musicUrl: data.musicUrl || '',
     };
 
     // Só adiciona images se existir

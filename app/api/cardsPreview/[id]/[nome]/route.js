@@ -1,11 +1,12 @@
-// app/api/cardsPreview/[id]/route.js
+// app/api/cardsPreview/[id]/[nome]/route.js
 import { NextResponse } from 'next/server';
-import prisma from '../../../../prisma/prisma';
+import prisma from '../../../../../prisma/prisma';
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id, nome } = params;
 
+    // Validação do ID
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
         { error: 'ID inválido ou ausente' },
@@ -13,8 +14,18 @@ export async function GET(request, { params }) {
       );
     }
 
+    // Validação do nome
+    if (!nome) {
+      return NextResponse.json(
+        { error: 'Nome ausente' },
+        { status: 400 }
+      );
+    }
+
     const card = await prisma.card.findUnique({
-      where: { id: Number(id) },
+      where: { 
+        id: Number(id),
+      },
       include: {
         images: {
           select: {
@@ -26,6 +37,15 @@ export async function GET(request, { params }) {
     });
 
     if (!card) {
+      return NextResponse.json(
+        { error: 'Cartão não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Validação opcional: verificar se o nome na URL corresponde ao nome do cartão
+    const decodedNome = decodeURIComponent(nome);
+    if (card.nome && decodedNome && card.nome.toLowerCase() !== decodedNome.toLowerCase()) {
       return NextResponse.json(
         { error: 'Cartão não encontrado' },
         { status: 404 }
