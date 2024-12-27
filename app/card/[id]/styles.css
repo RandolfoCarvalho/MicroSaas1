@@ -1,0 +1,10 @@
+/* styles.css */
+.card-preview {
+    position: relative;
+    border: 2px solid #8B0000; /* Vermelho escuro */
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #8B0000, #000000);
+    padding: 20px;
+    box-shadow: inset 0 0 20px rgba(139, 0, 0, 0.8);
+  }
