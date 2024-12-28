@@ -18,9 +18,11 @@ const CartoesPage = () => {
 
   useEffect(() => {
     if (session?.user?.id) {
-      fetch(`../../api/cards?userId=1`)
+      fetch(`../../api/cards?userId=${session.user.id}`) // Usa o ID dinâmico do usuário
         .then((res) => {
-          console.log('Raw Response:', session.user); // Exibe a resposta crua
+          if (!res.ok) {
+            throw new Error(`Erro na API: ${res.status}`);
+          }
           return res.json();
         })
         .then((data) => {
