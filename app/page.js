@@ -8,9 +8,11 @@ import LoginModal from './components/loginModal';
 import PaymentForm from './components/PaymentForm';
 import SuccessMessage from './components/ui/SuccessMessage';
 import { redirect } from 'next/dist/server/api-utils';
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   console.log("Componente renderizado");
+  const { data: session } = useSession();
   const {
     isAuthenticated,
     isModalVisible,
@@ -194,7 +196,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: 1, // Certifique-se que este userId existe no banco
+          userId: session.user.id,
           nome: formData.nome,
           mensagem: formData.mensagem,
           data: formData.data,

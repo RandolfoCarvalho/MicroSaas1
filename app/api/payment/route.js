@@ -14,7 +14,7 @@ export async function POST(request) {
 
     // Cria o pagamento com essas informações
     const paymentData = {
-      transaction_amount: 0.2,
+      transaction_amount: 0.1,
       description: 'Pagamento via PIX',
       payment_method_id: 'pix',
       payer: {

@@ -8,7 +8,7 @@ export async function POST(request) {
   try {
     const data = await request.json();
     console.log('Dados recebidos:', data); // Para debug
-
+    
     // Validação dos dados
     if (!data.userId || !data.nome || !data.mensagem || !data.data) {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST(request) {
       }
     });
 
-    return NextResponse.json(card);
+    return NextResponse.json(card); 
   } catch (error) {
     console.error('Erro detalhado:', error); // Log do erro completo
     return NextResponse.json(
