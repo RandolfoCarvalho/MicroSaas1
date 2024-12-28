@@ -1,22 +1,23 @@
 import { useState } from 'react';
 
 const useAuthVerification = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Verifica autenticação
-  const [isModalVisible, setIsModalVisible] = useState(false);   // Controla o modal de login/cadastro
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const verifyAuth = () => {
-    const user = localStorage.getItem('user');
+    const user = sessionStorage.getItem('user');
     if (!user) {
-      setIsModalVisible(true); // Se não autenticado, exibe o modal
-      setIsAuthenticated(false); // Atualiza o estado de autenticação
-      return false; // Usuário não autenticado
+      setIsAuthenticated(false);
+      setIsModalVisible(true); // Sempre atualiza o estado do modal quando não autenticado
+      return false;
     }
-    setIsAuthenticated(true); // Se autenticado, define como verdadeiro
-    return true; // Usuário autenticado
+
+    setIsAuthenticated(true);
+    return true;
   };
 
   const closeModal = () => {
-    setIsModalVisible(false); // Fecha o modal
+    setIsModalVisible(false);
   };
 
   return {
@@ -25,6 +26,7 @@ const useAuthVerification = () => {
     verifyAuth,
     closeModal,
     setIsModalVisible,
+    setIsAuthenticated,
   };
 };
 

@@ -240,17 +240,18 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    verifyAuth();
-    verifyAuth();
-    if (!isAuthenticated) {
+    
+    const isUserAuthenticated = verifyAuth(); // Captura o retorno do verifyAuth
+    
+    if (!isUserAuthenticated) {
       setIsModalVisible(true);
-      console.log(isAuthenticated)
+      console.log("Usuário não autenticado:", isAuthenticated);
       return;
     }
+    
     await setShowPaymentModal(true);
     handleGenerateQrCode();
   };
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -582,8 +583,11 @@ export default function Home() {
               </button>
             </form>
             {isModalVisible && (
-            <LoginModal isVisible={isModalVisible} closeModal={closeModal} />
-          )}
+              <LoginModal 
+                isVisible={isModalVisible} 
+                onClose={closeModal}
+              />
+            )}
           {showPaymentModal && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black bg-opacity-50"></div>
