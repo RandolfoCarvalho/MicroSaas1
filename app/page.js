@@ -12,6 +12,12 @@ import { useSession } from "next-auth/react";
 
 export default function Home() {
   console.log("Componente renderizado");
+  const [formErrors, setFormErrors] = useState({
+    nome: '',
+    mensagem: '',
+    data: ''
+  });
+  
   const { data: session } = useSession();
   const {
     isAuthenticated,
@@ -238,17 +244,48 @@ export default function Home() {
     }
   };
 
+
+  // Função de validação
+const validateForm = () => {
+  const errors = {
+    nome: '',
+    mensagem: '',
+    data: ''
+  };
+  let isValid = true;
+
+  if (!formData.nome?.trim()) {
+    errors.nome = 'Nome é obrigatório';
+    isValid = false;
+  }
+
+  if (!formData.mensagem?.trim()) {
+    errors.mensagem = 'Mensagem é obrigatória';
+    isValid = false;
+  }
+
+  if (!formData.data) {
+    errors.data = 'Data é obrigatória';
+    isValid = false;
+  }
+
+  setFormErrors(errors);
+  return isValid;
+};
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const isUserAuthenticated = verifyAuth(); // Captura o retorno do verifyAuth
+    const isUserAuthenticated = verifyAuth();
     
     if (!isUserAuthenticated) {
       setIsModalVisible(true);
       console.log("Usuário não autenticado:", isAuthenticated);
       return;
     }
-    
+    if (!validateForm()) {
+      return;
+    }
     await setShowPaymentModal(true);
     handleGenerateQrCode();
   };
@@ -457,46 +494,61 @@ export default function Home() {
           {/* Form Side */}
           <div className="rounded-lg border border-red-500/20 bg-gradient-to-r from-red-600/10 to-pink-600/10 backdrop-blur-sm p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Seu Nome
-                </label>
-                <input
-                  type="text"
-                  name="nome"
-                  value={formData.nome}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-lg bg-black/30 border border-red-500/20 text-white focus:outline-none focus:border-red-500"
-                  placeholder="Digite seu nome..."
-                />
-              </div>
+            <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Seu Nome
+            </label>
+            <input
+              type="text"
+              name="nome"
+              value={formData.nome}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-2 rounded-lg bg-black/30 border ${
+                formErrors.nome ? 'border-red-500' : 'border-red-500/20'
+              } text-white focus:outline-none focus:border-red-500`}
+              placeholder="Digite seu nome..."
+            />
+            {formErrors.nome && (
+              <p className="mt-1 text-sm text-red-500">{formErrors.nome}</p>
+            )}
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Sua Mensagem de Amor
-                </label>
-                <textarea
-                  name="mensagem"
-                  value={formData.mensagem}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-4 py-2 rounded-lg bg-black/30 border border-red-500/20 text-white focus:outline-none focus:border-red-500"
-                  placeholder="Escreva sua mensagem..."
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Sua Mensagem de Amor
+            </label>
+            <textarea
+              name="mensagem"
+              value={formData.mensagem}
+              onChange={handleInputChange}
+              rows={4}
+              className={`w-full px-4 py-2 rounded-lg bg-black/30 border ${
+                formErrors.mensagem ? 'border-red-500' : 'border-red-500/20'
+              } text-white focus:outline-none focus:border-red-500`}
+              placeholder="Escreva sua mensagem..."
+            />
+            {formErrors.mensagem && (
+              <p className="mt-1 text-sm text-red-500">{formErrors.mensagem}</p>
+            )}
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Data Especial
-                </label>
-                <input
-                  type="date"
-                  name="data"
-                  value={formData.data}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-lg bg-white text-gray-900 border border-red-500/20 focus:outline-none focus:border-red-500"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Data Especial
+            </label>
+            <input
+              type="date"
+              name="data"
+              value={formData.data}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-2 rounded-lg bg-white text-gray-900 border ${
+                formErrors.data ? 'border-red-500' : 'border-red-500/20'
+              } focus:outline-none focus:border-red-500`}
+            />
+            {formErrors.data && (
+              <p className="mt-1 text-sm text-red-500">{formErrors.data}</p>
+            )}
+          </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
