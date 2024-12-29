@@ -59,6 +59,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
+    // Validação do userId
     if (userId && isNaN(Number(userId))) {
       return NextResponse.json(
         { error: 'Invalid userId format. Must be a number.' },
@@ -66,23 +67,27 @@ export async function GET(request) {
       );
     }
 
+    // Busca os cards com imagens
     const cards = await prisma.card.findMany({
       where: userId ? { userId: Number(userId) } : {},
       include: {
-        images: {
-          select: {
-            url: true,
-            id: true
-          }
-        }
-      },
+        images: true // Incluir todos os campos das imagens
+      }
     });
-    const cardsWithFormattedImages = cards.map(card => ({
-      ...card,
-      images: card.images.map(image => `../../public/imagens/${image.url}`)
-    }));
 
-    return NextResponse.json(cardsWithFormattedImages);
+    // Formata os dados retornados
+    const cardsWithFormattedData = cards.map(card => ({
+      ...card,
+      // Remove o /public do caminho pois ele é servido estaticamente
+      musicUrl: card.musicUrl ? `/imagens/${card.musicUrl.split('/').pop()}` : null,
+      images: card.images.map(image => ({
+        ...image,
+        url: `/imagens/${image.url.split('/').pop()}`
+      }))
+    }));
+    console.log("cards" + cards);
+    return NextResponse.json(cardsWithFormattedData);
+
   } catch (error) {
     console.error('Error in GET:', error);
     return NextResponse.json(
@@ -91,4 +96,3 @@ export async function GET(request) {
     );
   }
 }
-

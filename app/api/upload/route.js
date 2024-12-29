@@ -22,14 +22,14 @@ export async function POST(request) {
     const filename = `${Date.now()}-${file.name}`;
     
     // Define o caminho para a pasta de imagens
-    const filepath = path.join(process.cwd(), 'app/public/imagens', filename);
+    const filepath = path.join(process.cwd(), 'public/imagens', filename);
 
     // Salva o arquivo
     await writeFile(filepath, buffer);
 
     // Retorna a URL do arquivo
     return NextResponse.json({ 
-      url: `/imagens/${filename}`
+      url: `imagens/${filename}`
     });
   } catch (error) {
     console.error('Error uploading file:', error);

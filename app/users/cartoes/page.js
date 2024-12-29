@@ -26,7 +26,7 @@ const CartoesPage = () => {
           return res.json();
         })
         .then((data) => {
-          console.log('API Response:', data); // Debug
+          console.log('API Response:', data);
           setCards(data);
         })
         .catch((err) => {
@@ -58,19 +58,19 @@ const CartoesPage = () => {
           {cards.map((card) => (
             <div key={card.id} className="rounded-lg border border-red-500/20 bg-gradient-to-r from-red-600/10 to-pink-600/10 backdrop-blur-sm p-8">
               <div className="w-full bg-gradient-to-r from-red-500/5 to-pink-500/5 p-8 rounded-lg border border-red-500/10 backdrop-blur-md">
-                {card.images?.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                      {card.images?.map((image, index) => (
-                        <img
-                          key={index}
-                          src={image.url} // Mudança aqui: acessar image.url ao invés de image diretamente
-                          alt={`Imagem ${index + 1}`}
-                          className="w-full h-32 object-cover rounded"
-                        />
-                      ))}
-                  </div>
-                )}
-
+              {card.images?.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {card.images?.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image.url} // Verifique se o caminho da URL está correto
+                      alt={`Imagem ${index + 1}`}
+                      className="w-full h-32 object-cover rounded"
+                      onError={(e) => e.target.src = '/default-image.jpg'} // Exemplo de fallback de imagem
+                    />
+                  ))}
+                </div>
+              )}
                 <div className="text-center">
                   <h2 className="text-2xl font-bold mb-4" style={{ color: card.corTexto, fontFamily: card.fonte }}>
                     {card.nome}
