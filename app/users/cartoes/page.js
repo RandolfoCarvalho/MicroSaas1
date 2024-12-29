@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardFooter } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { useSession } from "next-auth/react";
-import { Share, Download, QrCode } from "lucide-react"
+import { Share, Download, QrCode, Eye } from "lucide-react";
+import { useRouter } from 'next/navigation'; // Changed from 'next/router'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,83 +12,48 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu"
 
-
-const ImageCarousel = ({ images }) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-
-  const scrollPrev = () => {
-    if (emblaApi) emblaApi.scrollPrev();
-  };
-
-  const scrollNext = () => {
-    if (emblaApi) emblaApi.scrollNext();
-  };
-
-  if (!images || images.length === 0) return null;
-
-  return (
-    <div className="relative">
-      <div className="overflow-hidden rounded-lg" ref={emblaRef}>
-        <div className="flex">
-          {images.map((image, index) => (
-            <div key={index} className="flex-[0_0_100%] min-w-0">
-              <img
-                src={image.url}
-                alt={`Imagem ${index + 1}`}
-                className="w-full h-64 object-cover"
-                onError={(e) => e.target.src = '/default-image.jpg'}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {images.length > 1 && (
-        <>
-          <button
-            onClick={scrollPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </>
-      )}
-    </div>
-  );
-};
-
-
 const CartoesPage = () => {
   const [cards, setCards] = useState([]);
   const [error, setError] = useState(null);
   const { data: session } = useSession();
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetch(`../../api/cards?userId=${session.user.id}`) // Usa o ID dinâmico do usuário
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`Erro na API: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log('API Response:', data);
-          setCards(data);
-        })
-        .catch((err) => {
-          console.error('API Error:', err); // Debug
-          setError(err.message);
-        });
-    }
-  }, [session]);
+  const [isClient, setIsClient] = useState(false);
+  const router = useRouter();
   
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  useEffect(() => {
+    const fetchCards = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const res = await fetch(`/api/cards?userId=${session.user.id}`); // Updated API path
+        if (!res.ok) {
+          throw new Error(`Erro na API: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log('API Response:', data);
+        setCards(data);
+      } catch (err) {
+        console.error('API Error:', err);
+        setError(err.message);
+      }
+    };
+
+    fetchCards();
+  }, [session?.user?.id]); // Updated dependency array
+  
+
+  const handleViewCard = (id, nome) => {
+    e.preventDefault();
+    const slug = `${id}-${nome.toLowerCase().replace(/\s+/g, '-')}`;
+    router.push(`/card/${slug}`);
+  };
+
+  if (!isClient) {
+    return null;
+  }
 
   if (error) {
     return (
@@ -111,9 +77,9 @@ const CartoesPage = () => {
             {cards.map((card) => (
               <div key={card.id} className="rounded-lg border border-red-500/20 bg-gradient-to-r from-red-600/10 to-pink-600/10 backdrop-blur-sm p-8">
                 <div className="w-full bg-[#381021] p-8 rounded-lg border border-red-500/10 backdrop-blur-md">
-                  {card.images?.length > 0 && (
+                  {card.images && card.images.length > 0 && (
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                      {card.images?.map((image, index) => (
+                      {card.images.map((image, index) => (
                         <img
                           key={index}
                           src={image.url}
@@ -127,14 +93,14 @@ const CartoesPage = () => {
                   
                   <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4" style={{ 
-                      color: card.corTexto, 
-                      fontFamily: card.fonte 
+                      color: card.corTexto || 'white', // Added fallback color
+                      fontFamily: card.fonte || 'sans-serif' // Added fallback font
                     }}>
                       {card.nome}
                     </h2>
                     
                     <p className="text-lg text-gray-300 mb-6 italic break-words" style={{ 
-                      fontFamily: card.fonte,
+                      fontFamily: card.fonte || 'sans-serif',
                       wordWrap: 'break-word',
                       wordBreak: 'break-word',
                     }}>
@@ -154,29 +120,54 @@ const CartoesPage = () => {
                     <div className="mt-4 flex items-center justify-center">
                       <audio controls className="w-full max-w-md">
                         <source src={card.musicUrl} type="audio/mp3" />
+                        Seu navegador não suporta o elemento de áudio.
                       </audio>
                     </div>
                   )}
 
                   <div className="mt-4">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full bg-red-500 hover:bg-red-600 text-white border-none">
-                          <Share className="mr-2 h-4 w-4" />
-                          Compartilhar
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem>
-                          <QrCode className="mr-2 h-4 w-4" />
-                          QR Code
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full bg-red-500 hover:bg-red-600 text-white border-none flex items-center justify-center gap-2"
+                        onClick={(e) => e.preventDefault()} 
+                      >
+                        <Share size={16} />
+                        <span>Compartilhar</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <QrCode className="mr-2 h-4 w-4" />
+                        <span>QR Code</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        <span>Download</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewCard(card.id, card.nome);
+                        }}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        <span>Ver Cartão</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   </div>
                 </div>
               </div>
@@ -187,4 +178,5 @@ const CartoesPage = () => {
     </div>
   );
 };
+
 export default CartoesPage;

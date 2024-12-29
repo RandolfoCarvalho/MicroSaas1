@@ -11,7 +11,6 @@ const useAuthVerification = () => {
       setIsModalVisible(true); // Sempre atualiza o estado do modal quando não autenticado
       return false;
     }
-
     setIsAuthenticated(true);
     return true;
   };
@@ -19,7 +18,6 @@ const useAuthVerification = () => {
   const closeModal = () => {
     setIsModalVisible(false);
   };
-
   return {
     isAuthenticated,
     isModalVisible,

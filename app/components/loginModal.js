@@ -37,7 +37,6 @@ export default function LoginModal({ isVisible, onClose }) {
       }
 
       const data = await response.json();
-      console.log('Login bem-sucedido:', data);
       setError('');
 
       const signInResult = await signIn('credentials', {

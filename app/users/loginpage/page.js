@@ -42,8 +42,7 @@ export default function LoginPage() {
       }
   
       const data = await response.json();
-      console.log('Login bem-sucedido:', data);
-      setError(''); // Remove qualquer erro exibido anteriormente
+      setError(''); 
 
       // Usando signIn() do NextAuth para configurar a sessão
       await signIn('credentials', {

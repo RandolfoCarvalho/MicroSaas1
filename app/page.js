@@ -1,5 +1,4 @@
 "use client"
-
 import React, { useEffect, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
@@ -7,7 +6,6 @@ import useAuthVerification from './hooks/useAuthVerification';
 import LoginModal from './components/loginModal';
 import PaymentForm from './components/PaymentForm';
 import SuccessMessage from './components/ui/SuccessMessage';
-import { redirect } from 'next/dist/server/api-utils';
 import { useSession } from "next-auth/react";
 
 export default function Home() {
@@ -17,8 +15,7 @@ export default function Home() {
     mensagem: '',
     data: ''
   });
-  
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const {
     isAuthenticated,
     isModalVisible,
@@ -277,7 +274,6 @@ const validateForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const isUserAuthenticated = verifyAuth();
-    
     if (!isUserAuthenticated) {
       setIsModalVisible(true);
       console.log("Usuário não autenticado:", isAuthenticated);
@@ -318,7 +314,6 @@ const validateForm = () => {
   };
  
   useEffect(() => {
-    //verifyAuth();
     const createHeart = () => {
       const heart = document.createElement('div');
       heart.className = 'absolute animate-float text-red-500';
@@ -331,12 +326,10 @@ const validateForm = () => {
       
       heart.appendChild(heartIcon);
       document.getElementById('hearts-container').appendChild(heart);
-
       setTimeout(() => heart.remove(), 6000);
-    };
-
-    const interval = setInterval(createHeart, 300);
-    return () => clearInterval(interval);
+      }
+      const interval = setInterval(createHeart, 300);
+      return () => clearInterval(interval);
   }, []);
 
   // Componente Carrossel separado e corrigido
