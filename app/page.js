@@ -240,7 +240,7 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const isUserAuthenticated = verifyAuth(); // Captura o retorno do verifyAuth
     
     if (!isUserAuthenticated) {

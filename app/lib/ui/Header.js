@@ -71,7 +71,15 @@ export default function Header() {
               </li>
               {session ? (
                 <li>
-                  <a href="#" className="hover:underline" onClick={() => signOut()}>
+                  <a
+                    href="#"
+                    className="hover:underline"
+                    onClick={() => {
+                      sessionStorage.clear(); 
+                      localStorage.clear(); 
+                      signOut();
+                    }}
+                  >
                     Sair
                   </a>
                 </li>
