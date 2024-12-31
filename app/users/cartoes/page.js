@@ -127,49 +127,53 @@ const CartoesPage = () => {
                   )}
 
                   <div className="mt-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        className="w-full bg-red-500 hover:bg-red-600 text-white border-none flex items-center justify-center gap-2"
-                        onClick={(e) => e.preventDefault()} 
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="w-full bg-red-500 hover:bg-red-600 text-white border-none flex items-center justify-center gap-2"
+                          onClick={(e) => e.preventDefault()} 
+                        >
+                          <Share size={16} />
+                          <span>Compartilhar</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" 
+                        className="bg-white text-black shadow-lg border border-gray-300 rounded-md"
                       >
-                        <Share size={16} />
-                        <span>Compartilhar</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <QrCode className="mr-2 h-4 w-4" />
-                        <span>QR Code</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        <span>Download</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewCard(card.id, card.nome);
-                        }}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span>Ver Cartão</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <DropdownMenuItem 
+                          className="cursor-pointer hover:bg-gray-100"
+                          onClick={(e) => {
+                            e.preventDefault();
+                          }}
+                        >
+                          <QrCode className="mr-2 h-4 w-4" />
+                          <span>QR Code</span>
+                        </DropdownMenuItem>
+                        {/*<DropdownMenuItem 
+                          className="cursor-pointer hover:bg-gray-100"
+                          onClick={(e) => {
+                            e.preventDefault();
+                          }}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          <span>Download</span>
+                        </DropdownMenuItem> */}
+                        <DropdownMenuItem 
+                          className="cursor-pointer hover:bg-gray-100"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleViewCard(card.id, card.nome);
+                          }}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>Ver Cartão</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
+
                 </div>
               </div>
             ))}
