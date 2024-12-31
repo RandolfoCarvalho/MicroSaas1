@@ -4,19 +4,21 @@ import { Card, CardContent, CardHeader, CardFooter } from "../../components/ui/c
 import { Button } from "../../components/ui/button"
 import { useSession } from "next-auth/react";
 import { Share, Download, QrCode, Eye } from "lucide-react";
-import { useRouter } from 'next/navigation'; // Changed from 'next/router'
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu"
+import QRCodeGenerator from './QRCodeGenerator';
 
 const CartoesPage = () => {
   const [cards, setCards] = useState([]);
   const [error, setError] = useState(null);
   const { data: session } = useSession();
   const [isClient, setIsClient] = useState(false);
+  const [selectedCardUrl, setSelectedCardUrl] = useState(null);
   const router = useRouter();
   
   useEffect(() => {
@@ -28,29 +30,35 @@ const CartoesPage = () => {
       if (!session?.user?.id) return;
       
       try {
-        const res = await fetch(`/api/cards?userId=${session.user.id}`); // Updated API path
+        const res = await fetch(`/api/cards?userId=${session.user.id}`);
         if (!res.ok) {
           throw new Error(`Erro na API: ${res.status}`);
         }
         const data = await res.json();
-        console.log('API Response:', data);
         setCards(data);
       } catch (err) {
-        console.error('API Error:', err);
         setError(err.message);
       }
     };
 
     fetchCards();
-  }, [session?.user?.id]); // Updated dependency array
-  
+  }, [session?.user?.id]);
 
   const handleViewCard = (id, nome) => {
     const slug = `${id}-${nome.toLowerCase().replace(/\s+/g, '-')}`;
     const url = `/card/${slug}`;
     window.open(url, '_blank');
   };
-  
+
+  const handleQrCodeGeneration = (card) => {
+    const cardUrl = `${window.location.origin}/card/${card.id}-${card.nome.toLowerCase().replace(/\s+/g, '-')}`;
+    setSelectedCardUrl(cardUrl);
+  };
+
+  const handleShareWhatsApp = (url) => {
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(url)}`;
+    window.open(whatsappUrl, "_blank");
+  };
 
   if (!isClient) {
     return null;
@@ -94,16 +102,14 @@ const CartoesPage = () => {
                   
                   <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4" style={{ 
-                      color: card.corTexto || 'white', // Added fallback color
-                      fontFamily: card.fonte || 'sans-serif' // Added fallback font
+                      color: card.corTexto || 'white',
+                      fontFamily: card.fonte || 'sans-serif'
                     }}>
                       {card.nome}
                     </h2>
                     
                     <p className="text-lg text-gray-300 mb-6 italic break-words" style={{ 
                       fontFamily: card.fonte || 'sans-serif',
-                      wordWrap: 'break-word',
-                      wordBreak: 'break-word',
                     }}>
                       {card.mensagem}
                     </p>
@@ -132,7 +138,6 @@ const CartoesPage = () => {
                         <Button 
                           variant="outline" 
                           className="w-full bg-red-500 hover:bg-red-600 text-white border-none flex items-center justify-center gap-2"
-                          onClick={(e) => e.preventDefault()} 
                         >
                           <Share size={16} />
                           <span>Compartilhar</span>
@@ -144,28 +149,14 @@ const CartoesPage = () => {
                       >
                         <DropdownMenuItem 
                           className="cursor-pointer hover:bg-gray-100"
-                          onClick={(e) => {
-                            e.preventDefault();
-                          }}
+                          onClick={() => handleQrCodeGeneration(card)}
                         >
                           <QrCode className="mr-2 h-4 w-4" />
                           <span>QR Code</span>
                         </DropdownMenuItem>
-                        {/*<DropdownMenuItem 
-                          className="cursor-pointer hover:bg-gray-100"
-                          onClick={(e) => {
-                            e.preventDefault();
-                          }}
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          <span>Download</span>
-                        </DropdownMenuItem> */}
                         <DropdownMenuItem 
                           className="cursor-pointer hover:bg-gray-100"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleViewCard(card.id, card.nome);
-                          }}
+                          onClick={() => handleViewCard(card.id, card.nome)}
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           <span>Ver Cartão</span>
@@ -174,6 +165,21 @@ const CartoesPage = () => {
                     </DropdownMenu>
                   </div>
 
+                  {selectedCardUrl && (
+                    <div className="mt-4 p-4 bg-white/5 rounded-lg">
+                      <h3 className="text-xl text-center text-white mb-4">QR Code do Cartão</h3>
+                      <div className="flex justify-center mb-4">
+                        <QRCodeGenerator url={selectedCardUrl} />
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full bg-green-500 hover:bg-green-600 text-white border-none flex items-center justify-center gap-2"
+                        onClick={() => handleShareWhatsApp(selectedCardUrl)}
+                      >
+                        Compartilhar no WhatsApp
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
