@@ -11,7 +11,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu"
-import QRCodeGenerator from './QRCodeGenerator' ;
+import QRCodeGenerator from './qrCodeGenerator' ;
+
 const CartoesPage = () => {
   const [cards, setCards] = useState([]);
   const [error, setError] = useState(null);
