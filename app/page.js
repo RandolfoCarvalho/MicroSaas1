@@ -177,21 +177,22 @@ export default function Home() {
         const musicResponse = await fetch(formData.musicUrl);
         const musicBlob = await musicResponse.blob();
         const musicFormData = new FormData();
+        
+        // Defina o nome e o tipo correto para a música
         musicFormData.append('file', musicBlob, 'music.mp3');
-  
+
         const uploadMusicResponse = await fetch('/api/upload', {
           method: 'POST',
           body: musicFormData
         });
-  
+
         if (!uploadMusicResponse.ok) {
           throw new Error('Erro ao fazer upload da música');
         }
-  
+
         const musicData = await uploadMusicResponse.json();
-        musicUrl = musicData.url;
+        musicUrl = musicData.url;  // URL da música no S3
       }
-  
       // Criar o cartão com as URLs dos arquivos já upados
       const cardResponse = await fetch('/api/cards', {
         method: 'POST',
@@ -282,6 +283,7 @@ const validateForm = () => {
     if (!validateForm()) {
       return;
     }
+    //await createCard();
     await setShowPaymentModal(true);
     handleGenerateQrCode();
   };
