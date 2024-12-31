@@ -46,10 +46,11 @@ const CartoesPage = () => {
   
 
   const handleViewCard = (id, nome) => {
-    e.preventDefault();
     const slug = `${id}-${nome.toLowerCase().replace(/\s+/g, '-')}`;
-    router.push(`/card/${slug}`);
+    const url = `/card/${slug}`;
+    window.open(url, '_blank');
   };
+  
 
   if (!isClient) {
     return null;

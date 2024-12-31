@@ -1,8 +1,7 @@
 "use client"
 
 import { Geist, Geist_Mono } from "next/font/google";
-import "../globals.css";
-import { Providers } from '../providers';
+import "../../globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function Layout({ children }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
